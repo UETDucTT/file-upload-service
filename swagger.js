@@ -10,7 +10,7 @@ module.exports = {
   },
   servers: [
     {
-      url: "http://localhost:8081",
+      url: "http://52.148.65.201:8081",
       description: "Local server"
     }
   ],

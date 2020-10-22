@@ -27,7 +27,7 @@ function errorHandler (err, req, res, next) {
 const app = express();
 app.use(cors());
 app.use(errorHandler);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiDocumentation));
+app.use('/api', swaggerUi.serve, swaggerUi.setup(openApiDocumentation));
 
 app.get('/health', function (req, res) {
    res.json({"ok": true});
