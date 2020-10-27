@@ -9,6 +9,8 @@ const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const openApiDocumentation = require('./swagger');
 
+const LIMIT = 50;
+
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
@@ -17,7 +19,7 @@ const accountKey = process.env.ACCOUNT_KEY;
 const containerName = 'ductt';
 const blobService = azureStorage.createBlobService(`DefaultEndpointsProtocol=https;AccountName=${account};AccountKey=${accountKey};EndpointSuffix=core.windows.net`);
 const inMemoryStorage = multer.memoryStorage();
-const uploadStrategy = multer({ storage: inMemoryStorage, limits: { fileSize: 20 * 1024 * 1024 } }).single('resource');
+const uploadStrategy = multer({ storage: inMemoryStorage, limits: { fileSize: LIMIT * 1024 * 1024 } }).single('resource');
 
 function errorHandler (err, req, res, next) {
   res.status(500)
