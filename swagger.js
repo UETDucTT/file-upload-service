@@ -11,7 +11,6 @@ module.exports = {
   servers: [
     {
       url: "http://52.148.65.201:8081",
-      description: "Local server"
     }
   ],
   security: [
@@ -49,6 +48,39 @@ module.exports = {
       post: {
         tags: ["Upload"],
         description: "Upload single file to server",
+        requestBody: {
+          content: {
+            'multipart/form-data': {
+              schema: {
+                type: "object",
+                properties: {
+                  resource: {
+                    type: "string",
+                    format: "binary",
+                  }
+                }
+              }
+            }
+          },
+          required: true
+        },
+        responses: {
+          "200": {
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/UploadSuccess"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/upload/gcs": {
+      post: {
+        tags: ["Upload"],
+        description: "Upload single file to google cloud storage",
         requestBody: {
           content: {
             'multipart/form-data': {

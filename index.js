@@ -9,6 +9,8 @@ const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const openApiDocumentation = require('./swagger');
 
+const { uploadImage } = require('./helpers')
+
 const LIMIT = 50;
 
 if (process.env.NODE_ENV !== 'production') {
@@ -42,7 +44,7 @@ const getBlobName = (file) => {
 app.post('/upload', (req, res) => {
   uploadStrategy(req, res, (err) => {
     if (err) {
-      console.warn(JSON.stringify(err));
+      console.error(err);
     }
     if (err instanceof multer.MulterError) {
       res.status(400).json({
@@ -81,6 +83,45 @@ app.post('/upload', (req, res) => {
       })
     });
   });
+});
+
+app.post('/upload/gcs', (req, res) => {
+  uploadStrategy(req, res, async (err) => {
+    if (err) {
+      console.error(err);
+    }
+    if (err instanceof multer.MulterError) {
+      res.status(400).json({
+        uploaded: false,
+        error: err.message,
+      });
+      return;
+    } else if (err) {
+      res.status(500).json({
+        uploaded: false,
+        error: 'Unknown error',
+      })
+      return;
+    }
+    try {
+      const myFile = req.file;
+      const imageUrl = await uploadImage(myFile);
+      const result = {
+        size: req.file.size,
+        mimetype: req.file.mimetype,
+        url: imageUrl,
+      };
+      res.json({
+        uploaded: true,
+        result,
+      });
+    } catch (err) {
+      res.status(500).json({
+        uploaded: false,
+        error: 'Unknown error',
+      });
+    }
+  })
 });
 
 app.use(errorHandler);
