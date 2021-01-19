@@ -8,6 +8,9 @@ const uuid = require('uuid');
 const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const openApiDocumentation = require('./swagger');
+const AWS = require('aws-sdk');
+const multerS3 = require('multer-s3');
+const bodyParser = require('body-parser');
 
 const { uploadImage } = require('./helpers')
 
@@ -31,6 +34,7 @@ function errorHandler (err, req, res, next) {
 const app = express();
 app.use(cors());
 app.use(errorHandler);
+app.use(bodyParser.json())
 app.use('/api', swaggerUi.serve, swaggerUi.setup(openApiDocumentation));
 
 app.get('/health', function (req, res) {
@@ -84,6 +88,54 @@ app.post('/upload', (req, res) => {
     });
   });
 });
+
+const uploadAWS = multer({
+  storage: multerS3({
+    s3: new AWS.S3({
+      accessKeyId: process.env.ACCESS_KEY_ID,
+      secretAccessKey: process.env.SECRET_ACCESS_KEY,
+      endpoint: 'fra1.digitaloceanspaces.com',
+      signatureVersion: "v4",
+    }),
+    bucket: 'memospace',
+    acl: 'public-read',
+    contentType: multerS3.AUTO_CONTENT_TYPE,
+    key: (req, file, cb) => {
+      cb(null, getBlobName(file));
+    }
+  }),
+  limits: { fileSize: LIMIT * 1024 * 1024 }
+}).single('resource');
+
+app.post('/upload/aws', function (req, res) {  
+  uploadAWS(req, res, function(err) {
+    if (err) {
+      console.error(err);
+    }
+    if (err instanceof multer.MulterError) {
+      res.status(400).json({
+        uploaded: false,
+        error: err.message,
+      });
+      return;
+    } else if (err) {
+      res.status(500).json({
+        uploaded: false,
+        error: 'Unknown error',
+      })
+      return;
+    }
+    const result = {
+      size: req.file.size,
+      mimetype: req.file.mimetype,
+      url: req.file.key,
+    };
+    res.json({
+      uploaded: true,
+      result,
+    });
+  })
+})
 
 app.post('/upload/gcs', (req, res) => {
   uploadStrategy(req, res, async (err) => {
