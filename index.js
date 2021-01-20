@@ -128,7 +128,8 @@ app.post('/upload/aws', function (req, res) {
     const result = {
       size: req.file.size,
       mimetype: req.file.mimetype,
-      url: req.file.key,
+      key: req.file.key,
+      url: req.file.location,
     };
     res.json({
       uploaded: true,
